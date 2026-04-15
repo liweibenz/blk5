@@ -1,0 +1,1078 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 4f6a8c1e3b7d4a8a9c2d5e7f1a3b6c8d
+      name: 'Templates/Network devices'
+
+  templates:
+    - uuid: 5a7d9e2f4c8b4a8b8d1e6f3a5b7c9d2e
+      template: 'Barracuda WAF by SNMP'
+      name: 'Barracuda WAF by SNMP'
+      description: |
+        Barracuda WAF SNMP template for Zabbix 7.4.5.
+        Includes:
+        - inventory/system items
+        - Barracuda private status items
+        - CPU/load items
+        - corrected memory items
+        - interface discovery
+        - virtual service discovery
+        - graph prototypes
+      vendor:
+        name: Custom
+        version: 7.4.5
+      groups:
+        - name: 'Templates/Network devices'
+
+      items:
+        - uuid: 6b8e1f3a5d9c4a8a8c2d7e4f1a3b5c7d
+          name: Contact
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.4.0
+          key: barracuda.contact
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            System contact.
+          inventory_link: CONTACT
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: 7c9f2a4b6e1d4a8b9d3e5f7a2b4c6d8e
+          name: Location
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.6.0
+          key: barracuda.location
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            System location.
+          inventory_link: LOCATION
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: 8dab3c5d7f2e4a8a8b4d6e1f3a5b7c9d
+          name: 'Host name'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.5.0
+          key: barracuda.name
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            Host name.
+          inventory_link: NAME
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: 9ebc4d6e8a3f4a8b9d5e1f4a6b8c2d7e
+          name: 'Hardware model name'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.1.0
+          key: barracuda.model
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            Device description / model.
+          inventory_link: MODEL
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: afcd5e7f9b4a4a8a8c1d6e3f5a7c9d2e
+          name: 'SNMP uptime'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.3.0
+          key: barracuda.snmp.uptime
+          delay: 30s
+          trends: '0'
+          units: uptime
+          description: |
+            MIB: SNMPv2-MIB
+            SNMP engine uptime.
+          tags:
+            - tag: component
+              value: system
+
+        - uuid: b1de6f8a1c5b4a8b9d2e5f1a3b6c8d4e
+          name: Uptime
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.25.1.1.0
+          key: barracuda.uptime
+          delay: 30s
+          trends: '0'
+          units: uptime
+          description: |
+            MIB: HOST-RESOURCES-MIB
+            Host uptime.
+          tags:
+            - tag: component
+              value: system
+          triggers:
+            - uuid: c2ef7a9b2d6c4a8a8b3d7e4f1a3b5c7d
+              expression: 'last(/Barracuda WAF by SNMP/barracuda.uptime)<10m'
+              name: 'Host has been restarted'
+              event_name: '{HOST.NAME} has been restarted (uptime < 10m)'
+              priority: INFO
+              description: 'Uptime is less than 10 minutes.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+
+        - uuid: d3f18bac3e7d4a8b9d4e6f2a7b9c1d3e
+          name: 'SNMP agent availability'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          tags:
+            - tag: component
+              value: network
+          triggers:
+            - uuid: e4a29cbd4f8e4a8a8c1d6e3f5a7c9d2e
+              expression: 'max(/Barracuda WAF by SNMP/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0'
+              name: 'No SNMP data collection'
+              opdata: 'Current state: {ITEM.LASTVALUE1}'
+              priority: HIGH
+              description: 'SNMP is not available for polling. Please check device connectivity and SNMP settings.'
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: f5b3adce5a9f4a8b9d2e5f1a3b6c8d4e
+          name: 'Firmware version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.25.0
+          key: barracuda.firmware.version
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Current firmware version.
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: a6c4be1f6bad4a8a8b3d7e4f1a3b5c7d
+          name: 'Software version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.26.0
+          key: barracuda.software.version
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Additional software version information.
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: b7d5cf2a7cbe4a8b9d4e6f2a7b9c1d3e
+          name: 'Security definition version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.27.0
+          key: barracuda.security.version
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Security definition update version.
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+
+        - uuid: c8e6da3b8dcf4a8a8c1d6e3f5a7c9d2e
+          name: 'Serial number'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.28.0
+          key: barracuda.serialnumber
+          delay: 1h
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            System serial number.
+          inventory_link: SERIALNO_A
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: inventory
+          triggers:
+            - uuid: d9f7eb4c9ed14a8b9d2e5f1a3b6c8d4e
+              expression: 'last(/Barracuda WAF by SNMP/barracuda.serialnumber,#1)<>last(/Barracuda WAF by SNMP/barracuda.serialnumber,#2) and length(last(/Barracuda WAF by SNMP/barracuda.serialnumber))>0'
+              name: 'Chassis has been replaced'
+              event_name: 'Chassis has been replaced (new serial number received)'
+              priority: INFO
+              description: 'Serial number has changed. Acknowledge to close the problem manually.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+
+        - uuid: eaf81c5dae124a8a8b3d7e4f1a3b5c7d
+          name: 'HA status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.14.0
+          key: barracuda.ha.status
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            HA status summary.
+          tags:
+            - tag: component
+              value: cluster
+
+        - uuid: fb192d6ebf234a8b9d4e6f2a7b9c1d3e
+          name: 'Operating mode'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.15.0
+          key: barracuda.mode
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Operating mode summary.
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+          tags:
+            - tag: component
+              value: system
+
+        - uuid: a1a23e7fc0344a8a8c1d6e3f5a7c9d2e
+          name: 'Device status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.16.0
+          key: barracuda.device.status
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Current device status.
+          tags:
+            - tag: component
+              value: system
+          triggers:
+            - uuid: b2b34f80d1454a8b9d2e5f1a3b6c8d4e
+              expression: 'find(/Barracuda WAF by SNMP/barracuda.device.status,,,"Active")=0'
+              name: 'Barracuda device status is not Active'
+              event_name: 'Barracuda device status is not Active: {ITEM.VALUE}'
+              opdata: '{ITEM.LASTVALUE}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+
+        - uuid: c3c45a91e2564a8a8b3d7e4f1a3b5c7d
+          name: 'Interface summary'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.17.0
+          key: barracuda.interface.summary
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Interface summary text.
+          tags:
+            - tag: component
+              value: network
+          triggers:
+            - uuid: d4d56ba2f3674a8b9d4e6f2a7b9c1d3e
+              expression: 'find(/Barracuda WAF by SNMP/barracuda.interface.summary,,,"Down")=1'
+              name: 'Barracuda interface summary contains Down'
+              event_name: 'Barracuda interface summary contains Down: {ITEM.VALUE}'
+              opdata: '{ITEM.LASTVALUE}'
+              priority: WARNING
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+
+        - uuid: e5e67cb304784a8a8c1d6e3f5a7c9d2e
+          name: 'Service summary'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.20632.8.18.0
+          key: barracuda.service.summary
+          value_type: CHAR
+          description: |
+            MIB: Barracuda private
+            Virtual service summary.
+          tags:
+            - tag: component
+              value: service
+          triggers:
+            - uuid: f6f78dc415894a8b9d2e5f1a3b6c8d4e
+              expression: 'find(/Barracuda WAF by SNMP/barracuda.service.summary,,,"=Down")=1'
+              name: 'Barracuda virtual service has Down member'
+              event_name: 'Barracuda virtual service has Down member: {ITEM.VALUE}'
+              opdata: '{ITEM.LASTVALUE}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: a7a89ed5269a4a8a8b3d7e4f1a3b5c7d
+          name: 'CPU user'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.11.9.0
+          key: barracuda.cpu.user
+          units: '%'
+          description: |
+            MIB: UCD-SNMP-MIB
+            CPU user time.
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: b8b9afe637ab4a8b9d4e6f2a7b9c1d3e
+          name: 'CPU system'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.11.10.0
+          key: barracuda.cpu.system
+          units: '%'
+          description: |
+            MIB: UCD-SNMP-MIB
+            CPU system time.
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: c9cab0f748bc4a8a8c1d6e3f5a7c9d2e
+          name: 'CPU idle'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.11.11.0
+          key: barracuda.cpu.idle
+          units: '%'
+          description: |
+            MIB: UCD-SNMP-MIB
+            CPU idle time.
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: dadbc1a859cd4a8b9d2e5f1a3b6c8d4e
+          name: 'CPU used'
+          type: CALCULATED
+          key: barracuda.cpu.used
+          value_type: FLOAT
+          units: '%'
+          params: '100-last(//barracuda.cpu.idle)'
+          description: 'Calculated CPU used percentage.'
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: ebecd2b96ade4a8a8b3d7e4f1a3b5c7d
+          name: 'CPU count'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.11.67.0
+          key: barracuda.cpu.count
+          description: |
+            MIB: UCD-SNMP-MIB
+            Number of CPUs.
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: fcfde3ca7bef4a8b9d4e6f2a7b9c1d3e
+          name: 'Load average 1m'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.10.1.5.1
+          key: barracuda.load.1m
+          value_type: FLOAT
+          description: |
+            MIB: UCD-SNMP-MIB
+            Load average, 1 minute.
+            Uses integer-based load value scaled by 0.01.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: a1a1f4db8c1f4a8a8c1d6e3f5a7c9d2e
+          name: 'Load average 5m'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.10.1.5.2
+          key: barracuda.load.5m
+          value_type: FLOAT
+          description: |
+            MIB: UCD-SNMP-MIB
+            Load average, 5 minutes.
+            Uses integer-based load value scaled by 0.01.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: b2b2a5ec9d2f4a8b9d2e5f1a3b6c8d4e
+          name: 'Load average 15m'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.10.1.5.3
+          key: barracuda.load.15m
+          value_type: FLOAT
+          description: |
+            MIB: UCD-SNMP-MIB
+            Load average, 15 minutes.
+            Uses integer-based load value scaled by 0.01.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: cpu
+
+        - uuid: a3e7c1d54f8b4a8a8c2d6e3f5a7c9d2e
+          name: 'Memory total'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.4.5.0
+          key: barracuda.mem.total
+          units: B
+          description: |
+            MIB: UCD-SNMP-MIB
+            memTotalReal.
+            SNMP value is returned in kB and converted to bytes.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: component
+              value: memory
+
+        - uuid: b4f8d2e65a9c4a8b9d3e5f1a3b6c8d4e
+          name: 'Memory available'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.4.27.0
+          key: barracuda.mem.available
+          units: B
+          description: |
+            MIB: UCD-SNMP-MIB
+            memSysAvail.
+            More accurate for Linux-like systems than memAvailReal.
+            SNMP value is returned in kB and converted to bytes.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: component
+              value: memory
+
+        - uuid: c5a9e3f76bad4a8a8b4d6e1f3a5b7c9d
+          name: 'Memory cached'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.4.15.0
+          key: barracuda.mem.cached
+          units: B
+          description: |
+            MIB: UCD-SNMP-MIB
+            memCached.
+            SNMP value is returned in kB and converted to bytes.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: component
+              value: memory
+
+        - uuid: d6bad4a87cbe4a8b9d5e1f4a6b8c2d7e
+          name: 'Memory buffer'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2021.4.14.0
+          key: barracuda.mem.buffer
+          units: B
+          description: |
+            MIB: UCD-SNMP-MIB
+            memBuffer.
+            SNMP value is returned in kB and converted to bytes.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: component
+              value: memory
+
+        - uuid: e7cbe5b98dcf4a8a8c1d6e3f5a7c9d2e
+          name: 'Memory used'
+          type: CALCULATED
+          key: barracuda.mem.used
+          units: B
+          params: 'last(//barracuda.mem.total)-last(//barracuda.mem.available)'
+          description: |
+            Calculated used memory in bytes.
+          tags:
+            - tag: component
+              value: memory
+
+        - uuid: f8dcf6ca9ed14a8b9d2e5f1a3b6c8d4e
+          name: 'Memory used percent'
+          type: CALCULATED
+          key: barracuda.mem.used.pct
+          value_type: FLOAT
+          units: '%'
+          params: '100*(last(//barracuda.mem.total)-last(//barracuda.mem.available))/last(//barracuda.mem.total)'
+          description: |
+            Calculated memory utilization percentage using memSysAvail.
+          tags:
+            - tag: component
+              value: memory
+          triggers:
+            - uuid: a9edf7dbaf224a8a8b3d7e4f1a3b5c7d
+              expression: 'last(/Barracuda WAF by SNMP/barracuda.mem.used.pct)>{$BARRACUDA.MEMORY.UTIL.WARN.MAX}'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Barracuda WAF by SNMP/barracuda.mem.used.pct)<{$BARRACUDA.MEMORY.UTIL.WARN.MIN}'
+              name: 'High memory utilization'
+              event_name: 'High memory utilization (over {$BARRACUDA.MEMORY.UTIL.WARN.MAX}%)'
+              priority: WARNING
+              description: 'The system is running out of free memory.'
+              tags:
+                - tag: scope
+                  value: performance
+
+        - uuid: a1a15a9748d44a8a8c1d6e3f5a7c9d2e
+          name: 'TCP current established'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.6.9.0
+          key: barracuda.tcp.curr.estab
+          description: |
+            MIB: TCP-MIB
+            Current established TCP sessions.
+          tags:
+            - tag: component
+              value: network
+
+        - uuid: b2b26ba859e54a8b9d2e5f1a3b6c8d4e
+          name: 'TCP retransmitted segments'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.6.12.0
+          key: barracuda.tcp.retrans
+          description: |
+            MIB: TCP-MIB
+            TCP retransmitted segments.
+          tags:
+            - tag: component
+              value: network
+
+      discovery_rules:
+        - uuid: c3c37cb96af64a8a8b3d7e4f1a3b5c7d
+          name: 'Network interface discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFINDEX},1.3.6.1.2.1.2.2.1.1,{#IFNAME},1.3.6.1.2.1.31.1.1.1.1,{#IFDESCR},1.3.6.1.2.1.2.2.1.2]'
+          key: barracuda.net.discovery
+          delay: 1h
+          description: 'A table containing statistic information of the interfaces on the device.'
+          item_prototypes:
+            - uuid: d4d48dca7b074a8b9d4e6f2a7b9c1d3e
+              name: 'Interface [{#IFNAME}]: Admin status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.7.{#SNMPINDEX}'
+              key: 'barracuda.net.admin.status[{#IFNAME}]'
+              valuemap:
+                name: 'Barracuda interface status'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: e5e59edb8c184a8a8c1d6e3f5a7c9d2e
+              name: 'Interface [{#IFNAME}]: Oper status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}'
+              key: 'barracuda.net.oper.status[{#IFNAME}]'
+              valuemap:
+                name: 'Barracuda interface status'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: f6f6afec9d294a8b9d2e5f1a3b6c8d4e
+              name: 'Interface [{#IFNAME}]: Incoming traffic, rate'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}'
+              key: 'barracuda.net.in.bytes.rate[{#IFNAME}]'
+              units: Bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: a7a7b0fd1e3a4a8a8b3d7e4f1a3b5c7d
+              name: 'Interface [{#IFNAME}]: Outgoing traffic, rate'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}'
+              key: 'barracuda.net.out.bytes.rate[{#IFNAME}]'
+              units: Bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: b8b8c10e2f4b4a8b9d4e6f2a7b9c1d3e
+              name: 'Interface [{#IFNAME}]: Incoming packets, rate'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.7.{#SNMPINDEX}'
+              key: 'barracuda.net.in.pkts.rate[{#IFNAME}]'
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: c9c9d21f3f5c4a8a8c1d6e3f5a7c9d2e
+              name: 'Interface [{#IFNAME}]: Outgoing packets, rate'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.11.{#SNMPINDEX}'
+              key: 'barracuda.net.out.pkts.rate[{#IFNAME}]'
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: dadad3304f6d4a8b9d2e5f1a3b6c8d4e
+              name: 'Interface [{#IFNAME}]: Incoming errors'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}'
+              key: 'barracuda.net.in.error[{#IFNAME}]'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: ebebe4415f7e4a8a8b3d7e4f1a3b5c7d
+              name: 'Interface [{#IFNAME}]: Outgoing errors'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}'
+              key: 'barracuda.net.out.error[{#IFNAME}]'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: fcfcf5526f8f4a8b9d4e6f2a7b9c1d3e
+              name: 'Interface [{#IFNAME}]: Incoming discards'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}'
+              key: 'barracuda.net.in.discards[{#IFNAME}]'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: a1a1066370a04a8a8c1d6e3f5a7c9d2e
+              name: 'Interface [{#IFNAME}]: Outgoing discards'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.19.{#SNMPINDEX}'
+              key: 'barracuda.net.out.discards[{#IFNAME}]'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+
+          trigger_prototypes:
+            - uuid: b2b2177481b14a8b9d2e5f1a3b6c8d4e
+              expression: 'last(/Barracuda WAF by SNMP/barracuda.net.oper.status[{#IFNAME}])=2 and last(/Barracuda WAF by SNMP/barracuda.net.admin.status[{#IFNAME}])=1'
+              name: 'Interface [{#IFNAME}] is down'
+              event_name: 'Interface [{#IFNAME}] is down'
+              priority: AVERAGE
+              tags:
+                - tag: scope
+                  value: availability
+
+            - uuid: c3c3288592c24a8a8b3d7e4f1a3b5c7d
+              expression: 'last(/Barracuda WAF by SNMP/barracuda.net.in.error[{#IFNAME}])>last(/Barracuda WAF by SNMP/barracuda.net.in.error[{#IFNAME}],#2) or last(/Barracuda WAF by SNMP/barracuda.net.out.error[{#IFNAME}])>last(/Barracuda WAF by SNMP/barracuda.net.out.error[{#IFNAME}],#2)'
+              name: 'There are errors on the network interface [{#IFNAME}]'
+              event_name: 'There are errors on the network interface [{#IFNAME}]'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: notice
+
+          graph_prototypes:
+            - uuid: d4d43996a3d34a8b9d4e6f2a7b9c1d3e
+              name: 'Barracuda WAF: Interface [{#IFNAME}] traffic'
+              graph_items:
+                - color: 199C0D
+                  item:
+                    host: 'Barracuda WAF by SNMP'
+                    key: 'barracuda.net.in.bytes.rate[{#IFNAME}]'
+                - sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Barracuda WAF by SNMP'
+                    key: 'barracuda.net.out.bytes.rate[{#IFNAME}]'
+
+            - uuid: e5e54aa7b4e44a8a8c1d6e3f5a7c9d2e
+              name: 'Barracuda WAF: Interface [{#IFNAME}] packets'
+              graph_items:
+                - color: 199C0D
+                  item:
+                    host: 'Barracuda WAF by SNMP'
+                    key: 'barracuda.net.in.pkts.rate[{#IFNAME}]'
+                - sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Barracuda WAF by SNMP'
+                    key: 'barracuda.net.out.pkts.rate[{#IFNAME}]'
+
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+
+        - uuid: f6f65bb8c5f54a8b9d2e5f1a3b6c8d4e
+          name: 'Virtual service discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SVCNAME},1.3.6.1.4.1.20632.8.50.19.1.2,{#VIP},1.3.6.1.4.1.20632.8.50.19.1.3,{#VPORT},1.3.6.1.4.1.20632.8.50.19.1.4,{#SVCSTATUS},1.3.6.1.4.1.20632.8.50.19.1.5]'
+          key: barracuda.vservice.discovery
+          delay: 1h
+          description: 'A table containing Barracuda virtual service definitions and status.'
+          item_prototypes:
+            - uuid: a7a76cc9d6064a8a8c1d6e3f5a7c9d2e
+              name: 'Virtual service [{#SVCNAME}]: VIP'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.20632.8.50.19.1.3.{#SNMPINDEX}'
+              key: 'barracuda.vservice.vip[{#SVCNAME}]'
+              value_type: CHAR
+              delay: 1h
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: '{#SVCNAME}'
+
+            - uuid: b8b87dda07274a8b9d2e5f1a3b6c8d4e
+              name: 'Virtual service [{#SVCNAME}]: Port'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.20632.8.50.19.1.4.{#SNMPINDEX}'
+              key: 'barracuda.vservice.port[{#SVCNAME}]'
+              delay: 1h
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: '{#SVCNAME}'
+
+            - uuid: c9c98eeb18384a8a8b3d7e4f1a3b5c7d
+              name: 'Virtual service [{#SVCNAME}]: Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.20632.8.50.19.1.5.{#SNMPINDEX}'
+              key: 'barracuda.vservice.status[{#SVCNAME}]'
+              value_type: CHAR
+              delay: 5m
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 30m
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: '{#SVCNAME}'
+              trigger_prototypes:
+                - uuid: dad9fffc29494a8b9d4e6f2a7b9c1d3e
+                  expression: 'find(/Barracuda WAF by SNMP/barracuda.vservice.status[{#SVCNAME}],,,"Down")=1'
+                  name: 'Virtual service [{#SVCNAME}] is down'
+                  event_name: 'Virtual service [{#SVCNAME}] is down: {ITEM.VALUE}'
+                  opdata: '{ITEM.LASTVALUE}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                  tags:
+                    - tag: scope
+                      value: availability
+
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+
+      tags:
+        - tag: class
+          value: network
+        - tag: target
+          value: barracuda
+        - tag: target
+          value: waf
+
+      macros:
+        - macro: '{$BARRACUDA.MEMORY.UTIL.WARN.MAX}'
+          value: '85'
+          description: 'Warning threshold of memory utilization in %.'
+        - macro: '{$BARRACUDA.MEMORY.UTIL.WARN.MIN}'
+          value: '80'
+          description: 'Recovery threshold of memory utilization in %.'
+        - macro: '{$SNMP.TIMEOUT}'
+          value: 5m
+          description: 'The time interval for SNMP agent availability trigger expression.'
+        - macro: '{$SNMP_COMMUNITY}'
+          value: NETWORK-INFRA
+
+      dashboards:
+        - uuid: ebeb100d3a5a4a8a8c1d6e3f5a7c9d2e
+          name: 'Network interfaces'
+          pages:
+            - widgets:
+                - type: graphprototype
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Barracuda WAF by SNMP'
+                        name: 'Barracuda WAF: Interface [{#IFNAME}] traffic'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                    - type: INTEGER
+                      name: rows
+                      value: '5'
+
+      valuemaps:
+        - uuid: a1a1322f5c7c4a8a8b3d7e4f1a3b5c7d
+          name: 'Barracuda interface status'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
+
+  graphs:
+    - uuid: b2b243406d8d4a8b9d4e6f2a7b9c1d3e
+      name: 'Barracuda WAF: CPU utilization'
+      graph_items:
+        - color: 199C0D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.cpu.used
+  
+    - uuid: c1d2e3f405164a8b9d2e5f1a3b6c8d4e
+      name: 'Barracuda WAF: Memory utilization'
+      graph_items:
+        - color: 199C0D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.mem.used.pct
+
+    - uuid: c3c354517e9e4a8a8c1d6e3f5a7c9d2e
+      name: 'Barracuda WAF: CPU/Load'
+      graph_items:
+        - color: 199C0D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.cpu.used
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.cpu.user
+        - sortorder: '2'
+          color: 00611C
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.cpu.system
+        - sortorder: '3'
+          color: F7941D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.cpu.idle
+        - sortorder: '4'
+          color: FC6EA3
+          yaxisside: RIGHT
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.load.1m
+        - sortorder: '5'
+          color: 6C59DC
+          yaxisside: RIGHT
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.load.5m
+        - sortorder: '6'
+          color: C7A72D
+          yaxisside: RIGHT
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.load.15m
+
+    - uuid: bafe08ecb0334a8b9d4e6f2a7b9c1d3e
+      name: 'Barracuda WAF: Memory'
+      graph_items:
+        - color: 199C0D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.mem.used
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.mem.total
+        - sortorder: '2'
+          color: 00611C
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.mem.available
+        - sortorder: '3'
+          color: F7941D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.mem.cached
+        - sortorder: '4'
+          color: FC6EA3
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.mem.buffer
+
+    - uuid: f6f68784a1c14a8b9d4e6f2a7b9c1d3e
+      name: 'Barracuda WAF: TCP statistics'
+      graph_items:
+        - color: 199C0D
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.tcp.curr.estab
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Barracuda WAF by SNMP'
+            key: barracuda.tcp.retrans
+
